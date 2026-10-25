@@ -2,31 +2,56 @@ import shlex
 from . import commands
 
 HELP = '''Commands:
-  hello
-  add "First Last" 0671234567
-  edit "First Last" name "New Name"
-  edit "First Last" email firstname.lastname@example.com
-  edit "First Last" address "London, Main Street 10"
-  edit "First Last" birthday 25.10.1990
-  show "First Last"
-  delete "First Last"
-  all
-  search "London"
-  change-phone "First Last" 0671234567 0501234567
-  phone "First Last"
-  add-birthday "First Last" 25.10.1990
-  show-birthday "First Last"
-  birthdays [days]
-  add-note "Buy a birthday gift"
-  edit-note 1 "Buy a book"
-  delete-note 1
-  notes
-  search-notes "gift"
-  help
-  exit (or close)
+    hello
+    add "First Last" 0671234567
+    edit "First Last" name "New Name"
+    edit "First Last" email firstname.lastname@example.com
+    edit "First Last" address "London, Main Street 10"
+    edit "First Last" birthday 25.10.1990
+    show "First Last"
+    delete "First Last"
+    all
+    search "London"
+    change-phone "First Last" 0671234567 0501234567
+    phone "First Last"
+    add-birthday "First Last" 25.10.1990
+    show-birthday "First Last"
+    birthdays [days]
+    add-note "Buy a birthday gift"
+    edit-note 1 "Buy a book"
+    delete-note 1
+    notes
+    search-notes "gift"
+    help
+    exit (or close)
 Use quotes for arguments containing spaces.
 Use edit "First Last" email "" to clear an optional field.
 '''
+
+# Define the number of arguments each command requires
+# to validate a command structure before sending its request.
+COMMAND_USAGE = {
+    'hello': (0, 0),
+    'help': (0, 0),
+    'exit': (0, 0),
+    'close': (0, 0),
+    'add': (2, 2),
+    'edit': (3, 3),
+    'show': (1, 1),
+    'delete': (1, 1),
+    'all': (0, 0),
+    'search': (1, 1),
+    'change-phone': (3, 3),
+    'phone': (1, 1),
+    'add-birthday': (2, 2),
+    'show-birthday': (1, 1),
+    'birthdays': (0, 1),
+    'add-note': (1, 1),
+    'edit-note': (2, 2),
+    'delete-note': (1, 1),
+    'notes': (0, 0),
+    'search-notes': (1, 1),
+}
 
 # Parse the user input and split it into command
 # and arguments.
@@ -59,9 +84,14 @@ def main():
             print('Please enter a command.')
             continue
 
-        if command in ('exit', 'close', 'hello', 'help') and args:
-            print('This command takes no arguments.')
-        elif command in ('exit', 'close'):
+        # Check the command structure.
+        if command in COMMAND_USAGE:
+            minimum, maximum = COMMAND_USAGE[command]
+            if not minimum <= len(args) <= maximum:
+                print(f"Incorrect number of arguments for '{command}'. Type 'help' for usage.")
+                continue
+
+        if command in ('exit', 'close'):
             print('Good bye!')
             break
         elif command == 'hello':

@@ -1,7 +1,8 @@
 from threading import Lock
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from typing import Literal
+from pydantic import BaseModel, EmailStr
 from .models_contact import Address, Birthday, ContactRecord, Email, Name
 from .storage_contact import contact_to_dict, load_contacts, save_contacts
 from .storage_note import load_notes, note_to_dict, save_notes
@@ -15,7 +16,7 @@ lock = Lock()
 class NewContactRecord(BaseModel):
     name: str
     phone: str
-    email: str | None = None
+    email: EmailStr | None = None
     address: str | None = None
     birthday: str | None = None
 
@@ -30,7 +31,7 @@ class ContactRecordChange(BaseModel):
     old_phone: str | None = None
     # None leaves the field unchanged.
     # Empty string clears the field value.
-    email: str | None = None
+    email: EmailStr | Literal[''] | None = None
     address: str | None = None
     birthday: str | None = None
 
@@ -45,13 +46,17 @@ async def file_error(request: Request, error: OSError):
         content={'detail': 'Cannot read or save data files.'},
     )
 
-
 @app.exception_handler(ValueError)
 async def data_error(request: Request, error: ValueError):
     return JSONResponse(
         status_code=500,
         content={'detail': 'Invalid saved data. Check your json files.'},
     )
+
+# Endpoint to check that the API is ready.
+@app.get('/api/health')
+def health_check():
+    return {'status': 'ok'}
 
 # Endpoint to get contact records.
 @app.get('/api/contacts')
@@ -67,7 +72,6 @@ def birthdays(days: int = Query(default=7, ge=0, le=366)):
 
     return book.get_upcoming_birthdays(days)
 
-
 # Endpoint to get contact record by its name.
 @app.get('/api/contacts/item')
 def get_contact(name: str):
@@ -78,7 +82,6 @@ def get_contact(name: str):
         raise HTTPException(status_code=404, detail='Contact not found.')
 
     return contact_to_dict(record)
-
 
 # Endpoint to create a contact record or add a phone to an existing contact record.
 @app.post('/api/contacts', status_code=201)
@@ -205,7 +208,7 @@ def add_note(body: NoteData):
 
 # Endpoint to update a note record.
 @app.put('/api/notes/item')
-def edit_note(id: int, body: NoteData):
+def edit_note(body: NoteData, id: int = Query(ge=1)):
     # Prevent simultaneous changes to the data file.
     with lock:
         notebook = load_notes()
@@ -225,7 +228,7 @@ def edit_note(id: int, body: NoteData):
 
 # Endpoint to delete a contact record.
 @app.delete('/api/notes/item')
-def delete_note(id: int):
+def delete_note(id: int = Query(ge=1)):
     # Prevent simultaneous changes to the data file.
     with lock:
         notebook = load_notes()

@@ -1,48 +1,46 @@
 # Personal Assistant
 
-`backend-project`
-
-Contact and note models, JSON storage, and a FastAPI API.
-
-`frontend-project`
-
-Console client that communicates with the backend over HTTP.
-
+A contact book and notes application.
 Python 3.11 or newer is required.
 
-## Run the project
+## Install
 
-From the project root, open a terminal and run:
+From the project root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ./backend-project -e ./frontend-project
+pip install .
 ```
 
-### Run the backend
+For development use `pip install -e '.[test]'` instead.
+The code is used in place and the test dependencies are installed.
+
+### Check the installation in a clean environment
 
 ```bash
-source .venv/bin/activate
-python -m uvicorn personal_assistant.main:app --reload --host 127.0.0.1 --port 8000
+python3 -m venv /tmp/assistant-check
+source /tmp/assistant-check/bin/activate
+pip install /path/to/personal-assistant
+cd / && personal-assistant
 ```
 
-### Run the frontend
-
-Open a second terminal and run:
+## Run the project
 
 ```bash
-source .venv/bin/activate
 personal-assistant
 ```
 
-API documentation: http://127.0.0.1:8000/docs.
-The default backend URL is `http://127.0.0.1:8000`.
-To change it, set `ASSISTANT_API_URL` before starting the frontend:
+## Run tests
+
+From the project root:
 
 ```bash
-export ASSISTANT_API_URL=http://127.0.0.1:8000
+pip install -e '.[test]'
+pytest
 ```
+
+The tests use a temporary data directory.
 
 ## Command format
 

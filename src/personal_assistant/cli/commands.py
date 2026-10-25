@@ -1,5 +1,5 @@
 from functools import wraps
-from .api import request
+from .api_client import request
 
 CONTACT_SINGLE_FIELDS = ('name', 'email', 'address', 'birthday')
 
@@ -54,6 +54,21 @@ def format_notes(notes) -> str:
         lines.append(f"{note['id']}: {note['text']}")
 
     return "\n".join(lines)
+
+# Validate a number.
+def validate_number(number) -> bool:
+    if number.isascii() and number.isdigit():
+        return True
+
+    return False
+
+# Validate a note ID.
+def validate_note_id(note_id) -> bool:
+    if validate_number(note_id) and int(note_id) > 0:
+        return True
+
+    return False
+
 
 # Add/edit/delete/display contact record(s).
 @input_error
@@ -138,6 +153,10 @@ def birthdays(args: list) -> str:
     if len(args) > 1:
         raise ValueError("Correct command format: 'birthdays' or 'birthdays <days>', where <days> specifies how many days ahead to check for upcoming birthdays.")  
 
+    # Validate days number before sending the request.
+    if args and (not validate_number(args[0]) or not 0 <= int(args[0]) <= 366):
+        raise ValueError('Days must be a number from 0 to 366.')
+
     days = int(args[0]) if args else 7
     contacts = request('GET', '/contacts/birthdays', params={'days': days})   
 
@@ -154,6 +173,10 @@ def add_note(args: list) -> str:
 @input_error
 def edit_note(args: list) -> str:
     note_id, text = args
+    # Validate note IDs, which should be a positive numbers.
+    if not validate_note_id(note_id):
+        raise ValueError('Note ID must be a positive number.')
+
     request('PUT', '/notes/item', params={'id': int(note_id)}, data={'text': text})
 
     return 'Note updated.'
@@ -161,6 +184,10 @@ def edit_note(args: list) -> str:
 @input_error
 def delete_note(args: list) -> str:
     note_id, = args
+    # Apply the same ID validation before deleting a note.
+    if not validate_note_id(note_id):
+        raise ValueError('Note ID must be a positive number.')
+
     responce = request('DELETE', '/notes/item', params={'id': int(note_id)})
 
     return responce['message']
