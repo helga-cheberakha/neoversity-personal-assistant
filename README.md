@@ -44,6 +44,17 @@ To change it, set `ASSISTANT_API_URL` before starting the frontend:
 export ASSISTANT_API_URL=http://127.0.0.1:8000
 ```
 
+## Run backend tests
+
+Install the backend test dependencies and run the tests from the repository root:
+
+```bash
+pip install -e './backend-project[test]'
+python -m pytest backend-project/tests
+```
+
+The tests use a temporary data directory.
+
 ## Command format
 
 Enter one command at a time in the assistant prompt.

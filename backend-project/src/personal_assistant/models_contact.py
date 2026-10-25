@@ -102,8 +102,10 @@ class ContactRecord:
     # Adds a new phone number to the record 
     # if it does not exist yet.
     def add_phone(self, phone: str) -> None:
-        if not self.find_phone(phone):
-            self.phones.append(Phone(phone))
+        if self.find_phone(phone):
+            raise ValueError('This phone number already exists for this contact.')
+
+        self.phones.append(Phone(phone))
 
     # Removes the existing phone number.
     def remove_phone(self, phone: str) -> None:
