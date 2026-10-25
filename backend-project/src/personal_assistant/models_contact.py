@@ -1,6 +1,9 @@
-import re
 from collections import UserDict
 from datetime import date, datetime, timedelta
+from pydantic import EmailStr, TypeAdapter, ValidationError
+
+# Create one validator to check email addresses with Pydantic.
+email_adapter = TypeAdapter(EmailStr)
 
 # Implements "Field" to store each field data.
 class ContactField:
@@ -32,23 +35,12 @@ class Phone(ContactField):
 class Email(ContactField):
     def __init__(self, value: str):
         value = value.strip()
-        # Check the email address format.
-        re_email = r"[A-Za-z0-9_%+.-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+"
-        if not re.match(re_email, value):
-            raise ValueError('Invalid email address. Example: michael.peterson@example.com')
+        try:
+            # Check the address and use the normalized value.
+            value = email_adapter.validate_python(value)
+        except ValidationError as error:
+            raise ValueError('Invalid email address.') from error
 
-        local, domain = value.split('@')
-
-        # The part before @ cannot start or end with a dot
-        # or contain consecutive dots.
-        if local.startswith('.') or local.endswith('.') or '..' in local:
-            raise ValueError('Invalid email address.')
-
-        # Each part of the domain cannot start or end with a hyphen.
-        for part in domain.split('.'):
-            if part.startswith('-') or part.endswith('-'):
-                raise ValueError('Invalid email address.')
-        
         super().__init__(value)
 
 # Validate and store a contact postal address.

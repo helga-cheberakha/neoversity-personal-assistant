@@ -1,7 +1,8 @@
 from threading import Lock
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
+from typing import Literal
+from pydantic import BaseModel, EmailStr
 from .models_contact import Address, Birthday, ContactRecord, Email, Name
 from .storage_contact import contact_to_dict, load_contacts, save_contacts
 from .storage_note import load_notes, note_to_dict, save_notes
@@ -15,7 +16,7 @@ lock = Lock()
 class NewContactRecord(BaseModel):
     name: str
     phone: str
-    email: str | None = None
+    email: EmailStr | None = None
     address: str | None = None
     birthday: str | None = None
 
@@ -30,7 +31,7 @@ class ContactRecordChange(BaseModel):
     old_phone: str | None = None
     # None leaves the field unchanged.
     # Empty string clears the field value.
-    email: str | None = None
+    email: EmailStr | Literal[''] | None = None
     address: str | None = None
     birthday: str | None = None
 
