@@ -1,4 +1,3 @@
-import os
 import uvicorn
 import argparse
 
@@ -10,8 +9,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Run the Personal Assistant API server.')
     parser.add_argument(
         '--host',
-        default=os.environ.get('ASSISTANT_HOST', DEFAULT_HOST),
-        help=f'Interface to listen on (default: {DEFAULT_HOST}).',
+        default=DEFAULT_HOST,
+        help=f'Interface to listen on: {DEFAULT_HOST}.',
     )
     parser.add_argument(
         '--port',
