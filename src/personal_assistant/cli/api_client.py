@@ -1,4 +1,4 @@
-import httpx
+import httpx2 as httpx
 from personal_assistant.api.server import DEFAULT_HOST, DEFAULT_PORT
 
 # Backend base URL used by request().

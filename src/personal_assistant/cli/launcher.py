@@ -2,7 +2,7 @@ import socket
 import subprocess
 import sys
 import time
-import httpx
+import httpx2 as httpx
 from .api_client import base_url, set_base_url
 from personal_assistant.api.server import DEFAULT_HOST, DEFAULT_PORT
 
