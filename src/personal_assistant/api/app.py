@@ -46,13 +46,17 @@ async def file_error(request: Request, error: OSError):
         content={'detail': 'Cannot read or save data files.'},
     )
 
-
 @app.exception_handler(ValueError)
 async def data_error(request: Request, error: ValueError):
     return JSONResponse(
         status_code=500,
         content={'detail': 'Invalid saved data. Check your json files.'},
     )
+
+# Endpoint to check that the API is ready.
+@app.get('/api/health')
+def health_check():
+    return {'status': 'ok'}
 
 # Endpoint to get contact records.
 @app.get('/api/contacts')
@@ -68,7 +72,6 @@ def birthdays(days: int = Query(default=7, ge=0, le=366)):
 
     return book.get_upcoming_birthdays(days)
 
-
 # Endpoint to get contact record by its name.
 @app.get('/api/contacts/item')
 def get_contact(name: str):
@@ -79,7 +82,6 @@ def get_contact(name: str):
         raise HTTPException(status_code=404, detail='Contact not found.')
 
     return contact_to_dict(record)
-
 
 # Endpoint to create a contact record or add a phone to an existing contact record.
 @app.post('/api/contacts', status_code=201)

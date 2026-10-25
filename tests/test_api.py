@@ -1,8 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
-
-from personal_assistant import storage_base
-from personal_assistant.main import app
+from personal_assistant.api import storage_base
+from personal_assistant.api.app import app
 
 
 @pytest.fixture
@@ -11,6 +10,12 @@ def client(tmp_path, monkeypatch):
     monkeypatch.setattr(storage_base, 'DATA_DIR', tmp_path)
     return TestClient(app)
 
+# The launcher uses this endpoint to detect a running backend.
+def test_health(client):
+    response = client.get('/api/health')
+
+    assert response.status_code == 200
+    assert response.json() == {'status': 'ok'}
 
 def test_contact_create_update_delete(client):
     created = client.post('/api/contacts', json={
@@ -32,8 +37,7 @@ def test_contact_create_update_delete(client):
     assert deleted.status_code == 200
     assert client.get('/api/contacts').json() == []
 
-
-def test_duplicate_contact_name_add_phone(client):
+def test_duplicate_contact_name_phone(client):
     client.post('/api/contacts', json={'name': 'Clara Obrien', 'phone': '0671234567'})
     response = client.post('/api/contacts', json={'name': 'clara obrien', 'phone': '0501234567'})
     repeated_phone = client.post('/api/contacts', json={'name': 'Clara Obrien', 'phone': '0501234567'})
@@ -45,7 +49,6 @@ def test_duplicate_contact_name_add_phone(client):
     contacts = client.get('/api/contacts').json()
     assert len(contacts) == 1
     assert contacts[0]['phones'] == ['0671234567', '0501234567']
-
 
 @pytest.mark.parametrize('payload', [
     {'name': '   ', 'phone': '0671234567'},
@@ -60,7 +63,6 @@ def test_contact_invalid_values(client, payload):
     assert response.status_code == 422
     assert client.get('/api/contacts').json() == []
 
-
 @pytest.mark.parametrize('method, url, kwargs', [
     ('get', '/api/contacts/item', {'params': {'name': 'Missing'}}),
     ('put', '/api/contacts/item', {'params': {'name': 'Missing'}, 'json': {'email': 'a@example.com'}}),
@@ -70,7 +72,6 @@ def test_missing_contact(client, method, url, kwargs):
     response = getattr(client, method)(url, **kwargs)
 
     assert response.status_code == 404
-
 
 def test_note_create_update_delete(client):
     created = client.post('/api/notes', json={'text': 'Buy a birthday gift'})
@@ -85,7 +86,6 @@ def test_note_create_update_delete(client):
     assert deleted.status_code == 200
     assert client.get('/api/notes').json() == []
 
-
 def test_duplicate_note_text(client):
     first = client.post('/api/notes', json={'text': 'Same note'})
     second = client.post('/api/notes', json={'text': 'Same note'})
@@ -96,13 +96,11 @@ def test_duplicate_note_text(client):
     assert first.json()['id'] != second.json()['id']
     assert len(client.get('/api/notes').json()) == 2
 
-
 def test_note_empty_text(client):
     response = client.post('/api/notes', json={'text': '   '})
 
     assert response.status_code == 422
     assert client.get('/api/notes').json() == []
-
 
 @pytest.mark.parametrize('method', ['put', 'delete'])
 def test_missing_note(client, method):
@@ -110,7 +108,6 @@ def test_missing_note(client, method):
     response = getattr(client, method)('/api/notes/item', params={'id': 999}, **kwargs)
 
     assert response.status_code == 404
-
 
 @pytest.mark.parametrize('method', ['put', 'delete'])
 def test_note_id_value(client, method):

@@ -1,7 +1,17 @@
-import os
 import httpx
+from personal_assistant.api.server import DEFAULT_HOST, DEFAULT_PORT
 
-BASE_URL = os.environ.get('ASSISTANT_API_URL', 'http://127.0.0.1:8000').rstrip('/')
+# Backend base URL used by request().
+_base_url = f'http://{DEFAULT_HOST}:{DEFAULT_PORT}'
+
+# Return the backend base URL.
+def base_url() -> str:
+    return _base_url
+
+# Set the backend base URL for all following requests.
+def set_base_url(url: str) -> None:
+    global _base_url
+    _base_url = url.rstrip('/')
 
 # Define validation error messages for all fields.
 FIELD_ERROR_MESSAGES = {
@@ -40,14 +50,19 @@ def format_validation_errors(errors):
         message = FIELD_ERROR_MESSAGES.get(field_name, error.get('msg', 'Invalid value.'))
 
         field_label = field.capitalize()
-        messages.append(f'{field_label}: {message}' if field else message)
+        text = f'{field_label}: {message}' if field else message
+
+        # Show each message once.
+        if text not in messages:
+            messages.append(text)
 
     return ' '.join(messages) or 'Invalid request data.'
 
 
+# Send a request to the backend API and return the decoded json response.
 def request(method: str, path: str, data=None, params=None):
     try:
-        endpoint = BASE_URL + '/api' + path
+        endpoint = base_url() + '/api' + path
         response = httpx.request(method, endpoint, json=data, params=params, timeout=5)
     except httpx.RequestError:
         raise ValueError('Cannot connect to the backend. Check that it is running.') from None

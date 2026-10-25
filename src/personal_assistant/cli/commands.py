@@ -1,5 +1,5 @@
 from functools import wraps
-from .api import request
+from .api_client import request
 
 CONTACT_SINGLE_FIELDS = ('name', 'email', 'address', 'birthday')
 
