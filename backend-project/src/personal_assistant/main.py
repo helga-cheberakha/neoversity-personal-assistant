@@ -206,7 +206,7 @@ def add_note(body: NoteData):
 
 # Endpoint to update a note record.
 @app.put('/api/notes/item')
-def edit_note(id: int, body: NoteData):
+def edit_note(body: NoteData, id: int = Query(ge=1)):
     # Prevent simultaneous changes to the data file.
     with lock:
         notebook = load_notes()
@@ -226,7 +226,7 @@ def edit_note(id: int, body: NoteData):
 
 # Endpoint to delete a contact record.
 @app.delete('/api/notes/item')
-def delete_note(id: int):
+def delete_note(id: int = Query(ge=1)):
     # Prevent simultaneous changes to the data file.
     with lock:
         notebook = load_notes()

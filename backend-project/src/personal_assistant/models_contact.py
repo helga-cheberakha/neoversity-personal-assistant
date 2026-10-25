@@ -25,8 +25,8 @@ class Name(ContactField):
 # Validate and store a contact phone number.
 class Phone(ContactField):
     def __init__(self, value: str):
-        value = value.strip()
-        if not value.isdecimal() or len(value) != 10:
+        # Reject spaces, punctuation, and Unicode digits.
+        if not value.isascii() or not value.isdigit() or len(value) != 10:
             raise ValueError('Invalid phone number format. It must contain 10 digits.')
 
         super().__init__(value)
@@ -34,11 +34,13 @@ class Phone(ContactField):
 # Validate and store a contact email address.
 class Email(ContactField):
     def __init__(self, value: str):
-        value = value.strip()
         try:
-            # Check the address and use the normalized value.
+            # Reject whitespace.
+            if any(character.isspace() for character in value):
+                raise ValueError
+
             value = email_adapter.validate_python(value)
-        except ValidationError as error:
+        except (ValidationError, ValueError) as error:
             raise ValueError('Invalid email address.') from error
 
         super().__init__(value)
@@ -56,6 +58,14 @@ class Address(ContactField):
 class Birthday(ContactField):
     def __init__(self, value: str):
         try:
+            # Require the complete date string to match DD.MM.YYYY.
+            if len(value) != 10 or value[2] != '.' or value[5] != '.' or not (
+                value[:2].isdigit() and value[:2].isascii()
+                and value[3:5].isdigit() and value[3:5].isascii()
+                and value[6:].isdigit() and value[6:].isascii()
+            ):
+                raise ValueError
+
             birthday = datetime.strptime(value, '%d.%m.%Y').date()
             super().__init__(birthday)
         except ValueError:
